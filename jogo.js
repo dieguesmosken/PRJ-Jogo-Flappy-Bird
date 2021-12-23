@@ -1,23 +1,50 @@
 console.log('[TeuzinYTBR] Flappy Bird');
 console.log('Inscreva-se no canal :D https://www.youtube.com/TeuzinYTBR');
 
+const som_HIT = new Audio();
+som_HIT.src = './efeitos/hit.wav';
+
 const sprites = new Image();
 sprites.src = './img/sprites.png';
 
 const canvas = document.querySelector('canvas');
 const contexto = canvas.getContext('2d');
 
-// flappybird
-const flappyBird = {
+function fazColisao(flappyBird, chao) {
+    const flappyBirdY = flappyBird.y + flappyBird.altura;
+    const chaoY = chao.y;
+
+    if(flappyBirdY >= chaoY) {
+        return true;
+    }
+
+    return false;
+}
+
+function criaFlappyBird(){
+    const flappyBird = {
     spriteX: 0,
     spriteY: 0,
     largura: 33,
     altura: 24,
     x: 10,
     y: 50,
+    pulo: 4.6,
+    pula(){
+       console.log("devo pular") ;
+       flappyBird.velocidade = -flappyBird.pulo;
+    },
     gravidade: 0.25,
     velocidade: 0,
     atualiza() {
+        if(fazColisao(flappyBird, chao)) {
+            console.log("fez colisao");
+            som_HIT.play();
+
+            mudaParaTela(Telas.INICIO);
+            return;
+        }
+
         flappyBird.velocidade = flappyBird.velocidade + flappyBird.gravidade;
         //console.log(flappyBird.y);
         flappyBird.y = flappyBird.y + flappyBird.velocidade;
@@ -32,6 +59,10 @@ const flappyBird = {
         );
     }
 }
+return flappyBird;
+};
+// flappybird
+
 // chao 
 const chao = {
     spriteX: 0,
@@ -109,21 +140,29 @@ const mensagemGetReady = {
 //
 //telas
 //
-let telaAtiva = {}
-function mudaparaTela(novaTela) {
+const globais = {};
+let telaAtiva = {};
+function mudaParaTela(novaTela) {
     telaAtiva = novaTela;
+
+    if(telaAtiva.inicializa){
+        telaAtiva.inicializa();    
+    }
 }
 const Telas = {
     INICIO: {
+        inicializa() {
+            globais.flappyBird = criaFlappyBird();
+        },
         desenha() {
             
             planoDeFundo.desenha();
-            flappyBird.desenha();
+            globais.flappyBird.desenha();
             chao.desenha();
             mensagemGetReady.desenha();
         },
         click() {
-            mudaparaTela(Telas.JOGO);
+            mudaParaTela(Telas.JOGO);
         },
         atualiza() {
 
@@ -136,10 +175,13 @@ Telas.JOGO = {
     desenha() {
         planoDeFundo.desenha();
         chao.desenha();
-        flappyBird.desenha();
+        globais.flappyBird.desenha();
+    },
+    click() {
+        globais.flappyBird.pula();
     },
     atualiza() {
-        flappyBird.atualiza();
+        globais.flappyBird.atualiza();
     }
 };
 
@@ -157,5 +199,5 @@ window.addEventListener('click', function () {
     }
 });
 
-mudaparaTela(Telas.INICIO);
+mudaParaTela(Telas.INICIO);
 loop();
